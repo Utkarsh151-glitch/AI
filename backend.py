@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import joblib
 import numpy as np
 
@@ -16,29 +17,26 @@ app.add_middleware(
 )
 
 # Load trained model and scaler
-model = joblib.load("diabetes_model.pkl")  # Load XGBoost model
+model = joblib.load("diabetes_model.pkl")  # Load trained XGBoost model
 scaler = joblib.load("scaler.pkl")  # Load pre-trained scaler
 
-# Feature list (must match training order)
-selected_features = [
-    "Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
-    "Insulin", "BMI", "DiabetesPedigreeFunction", "Age"
-]
+# Define input schema
+class DiabetesInput(BaseModel):
+    Pregnancies: float
+    Glucose: float
+    BloodPressure: float
+    SkinThickness: float
+    Insulin: float
+    BMI: float
+    DiabetesPedigreeFunction: float
+    Age: float
 
 @app.post("/predict")
-async def predict(
-    Pregnancies: float = Form(...),
-    Glucose: float = Form(...),
-    BloodPressure: float = Form(...),
-    SkinThickness: float = Form(...),
-    Insulin: float = Form(...),
-    BMI: float = Form(...),
-    DiabetesPedigreeFunction: float = Form(...),
-    Age: float = Form(...)
-):
+async def predict(data: DiabetesInput):
     # Prepare input data
-    input_data = np.array([[Pregnancies, Glucose, BloodPressure, SkinThickness,
-                            Insulin, BMI, DiabetesPedigreeFunction, Age]])
+    input_data = np.array([[data.Pregnancies, data.Glucose, data.BloodPressure, 
+                            data.SkinThickness, data.Insulin, data.BMI, 
+                            data.DiabetesPedigreeFunction, data.Age]])
     
     # Scale input (ensure consistency with training)
     input_scaled = scaler.transform(input_data)
