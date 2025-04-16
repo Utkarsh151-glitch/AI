@@ -1,2 +1,2 @@
-# AI
-Early diabetes detection using AI
+# Techx
+Diabetes prediction web app
